@@ -150,7 +150,13 @@
                             "storageAccountType": "Premium_LRS"
                         }
                     },
-                    "dataDisks": []
+                    "dataDisks": [
+                        {
+                            "diskSizeGB": 1023,
+                            "lun": 0,
+                            "createOption": "Empty"
+                        }
+                    ]
                 },
                 "networkProfile": {
                     "networkInterfaces": [
