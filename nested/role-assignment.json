@@ -10,19 +10,18 @@
         }
     },
     "variables": {
-        "resourceName": "[concat('gigamon', '/Microsoft.Authorization/', parameters('principalId'))]"
     },
     "resources": [
 {
-    "type": "Microsoft.Compute/virtualMachines/providers/roleAssignments",
+    "type": "Microsoft.Authorization/roleAssignments",
     "apiVersion": "2017-05-01",
-    "name": "[variables('resourceName')]",
+    "name": "[parameters('gigamonSettings').resourceName]",
     "dependsOn": [
     ],
     "properties": {
       "roleDefinitionId": "[parameters('gigamonSettings').contributor]",
       "principalId": "[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),'2015-08-31-PREVIEW').principalId]",
-      "scope": "[resourceId('Microsoft.Compute/virtualMachines',parameters('gigamonSettings').vmName)]"
+      "scope": "[resourceGroup().id]"
     }
   }
 ]

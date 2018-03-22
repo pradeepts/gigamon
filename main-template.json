@@ -8,6 +8,14 @@
             "metadata": {
                 "description": "The base uri where artifacts required by this template are located. when the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
             }
+        },
+        "guid":{
+            "type": "string",
+            "defaultValue":"d937ac3d-7a6e-4121-bd25-df10338a6f81",
+            "metadata": {
+                "type": "sessionid",
+                "description": "Unique session id."
+            }
         }
     },
     "variables": {
@@ -43,6 +51,7 @@
             "vmSize": "Standard_D2s_v3",
             "extName": "gigamon-setup",
             "customImageSubscription": "[subscription().subscriptionId]",
+            "resourceName":"[parameters('guid')]",
             "customImageRG": "gigamonazure2",
             "contributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",    
             "scriptUrl": "[concat(parameters('_artifactsLocation'),'/scripts/.sh')]"
