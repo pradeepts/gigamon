@@ -195,6 +195,9 @@
             "type": "Microsoft.Compute/virtualMachines/providers/roleAssignments",
             "apiVersion": "2017-05-01",
             "name": "[parameters('gigamonSettings').resourceName]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/',parameters('gigamonSettings').vmName,'/extensions/MSILinuxExtension')]"
+            ],
             "properties": {
               "roleDefinitionId": "[parameters('gigamonSettings').contributor]",
               "principalId": "[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),parameters('apiVersions').vmApiVersion).principalId]"
