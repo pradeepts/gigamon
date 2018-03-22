@@ -156,7 +156,7 @@
                             "name": "[concat(parameters('gigamonSettings').vmName,'_DataDisk1')]",
                             "diskSizeGB": 40,
                             "lun": 1,
-                            "createOption": "Empty"
+                            "createOption": "FromImage"
                         }
                     ]
                 },
