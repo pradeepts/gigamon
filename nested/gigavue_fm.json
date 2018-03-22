@@ -190,19 +190,12 @@
                 },
                 "protectedSettings": {}
             }
-        },
-        {
-            "type": "Microsoft.Compute/virtualMachines/providers/roleAssignments",
-            "apiVersion": "2017-05-01",
-            "name": "[parameters('gigamonSettings').resourceName]",
-            "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/',parameters('gigamonSettings').vmName,'/extensions/MSILinuxExtension')]"
-            ],
-            "properties": {
-              "roleDefinitionId": "[parameters('gigamonSettings').contributor]",
-              "principalId": "[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),'2015-08-31-PREVIEW').principalId]",
-              "scope": "gigamonazure2"
-            }
-          }
-    ]
+        }
+    ],
+    "outputs":{
+        "principalId":{
+            "type":"string",
+            "value":"[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),'2015-08-31-PREVIEW').principalId]",
+        }
+        }
 }

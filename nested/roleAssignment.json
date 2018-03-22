@@ -1,0 +1,30 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "gigamonSettings": {
+            "type": "object"
+        },
+        "principalId": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "resourceName": "[concat('gigamon', '/Microsoft.Authorization/', parameters('principalId'))]"
+    },
+    "resources": [
+{
+    "type": "Microsoft.Compute/virtualMachines/providers/roleAssignments",
+    "apiVersion": "2017-05-01",
+    "name": "[variables('resourceName')]",
+    "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/',parameters('gigamonSettings').vmName,'/extensions/MSILinuxExtension')]"
+    ],
+    "properties": {
+      "roleDefinitionId": "[parameters('gigamonSettings').contributor]",
+      "principalId": "[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),'2015-08-31-PREVIEW').principalId]",
+      "scope": "[resourceId('Microsoft.Compute/virtualMachines',parameters('gigamonSettings').vmName)]"
+    }
+  }
+]
+}

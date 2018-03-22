@@ -8,14 +8,6 @@
             "metadata": {
                 "description": "The base uri where artifacts required by this template are located. when the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
             }
-        },
-        "guid":{
-            "type": "string",
-            "defaultValue":"d937ac3d-7a6e-4121-bd25-df10338a6f81",
-            "metadata": {
-                "type": "sessionid",
-                "description": "Unique session id."
-            }
         }
     },
     "variables": {
@@ -52,14 +44,11 @@
             "extName": "gigamon-setup",
             "customImageSubscription": "[subscription().subscriptionId]",
             "customImageRG": "gigamonazure2",
-            "resourceName":"[variables('resourceName')]",
-            "contributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-            "scope": "[resourceGroup().id]",      
+            "contributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",    
             "scriptUrl": "[concat(parameters('_artifactsLocation'),'/scripts/.sh')]"
         },     
         "location": "[resourceGroup().location]",
-        "suffix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
-        "resourceName": "[concat('gigamon', '/Microsoft.Authorization/', parameters('guid'))]"
+        "suffix": "[substring(uniqueString(resourceGroup().id), 0, 5)]"
     },
     "resources": [
         {
@@ -105,6 +94,29 @@
                     },
                     "apiVersions": {
                         "value": "[variables('apiVersions')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "Role-Assignment",
+            "apiVersion": "2016-02-01",
+            "dependsOn": [
+                "GigaVUE_FM"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/nested/role-assignment.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "gigamonSettings": {
+                        "value": "[variables('gigamonSettings')]"
+                    },
+                    "principalId": {
+                        "value": "[reference('GigaVUE_FM').outputs.principalId.value]"
                     }
                 }
             }
