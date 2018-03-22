@@ -145,6 +145,7 @@
                         "id":"[concat('/subscriptions/',parameters('gigamonSettings').customImageSubscription,'/resourceGroups/',parameters('gigamonSettings').customImageRG,'/providers/Microsoft.Compute/images/GigaVUE-FM')]"
                     },
                     "osDisk": {
+                        "name": "[concat(parameters('gigamonSettings').vmName,'_OSDisk')]",
                         "createOption": "fromImage",
                         "managedDisk": {
                             "storageAccountType": "Premium_LRS"
@@ -152,8 +153,9 @@
                     },
                     "dataDisks": [
                         {
+                            "name": "[concat(parameters('gigamonSettings').vmName,'_DataDisk1')]",
                             "diskSizeGB": 40,
-                            "lun": 0,
+                            "lun": 1,
                             "createOption": "Empty"
                         }
                     ]
