@@ -9,9 +9,17 @@
                 "description": "The base uri where artifacts required by this template are located. when the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
             }
         },
-        "guid":{
+        "guid1":{
             "type": "string",
             "defaultValue":"d937ac3d-7a6e-4121-bd25-df10338a6f81",
+            "metadata": {
+                "type": "sessionid",
+                "description": "Unique session id."
+            }
+        },
+        "guid2":{
+            "type": "string",
+            "defaultValue":"42c0f9d6-d4d7-487f-82ea-5d66e540426e",
             "metadata": {
                 "type": "sessionid",
                 "description": "Unique session id."
@@ -51,9 +59,10 @@
             "vmSize": "Standard_D2s_v3",
             "extName": "gigamon-setup",
             "customImageSubscription": "[subscription().subscriptionId]",
-            "resourceName":"[parameters('guid')]",
+            "resourceName1":"[parameters('guid1')]",
+            "resourceName2":"[parameters('guid2')]",
             "customImageRG": "gigamonazure2",
-            "owner": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '8e3af657-a8ff-443c-a75c-2fe8c4bcb635')]",    
+            "contributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",    
             "scriptUrl": "[concat(parameters('_artifactsLocation'),'/scripts/.sh')]"
         },     
         "location": "[resourceGroup().location]",

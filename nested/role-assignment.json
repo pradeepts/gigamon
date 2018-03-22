@@ -15,13 +15,23 @@
 {
     "type": "Microsoft.Authorization/roleAssignments",
     "apiVersion": "2017-05-01",
-    "name": "[parameters('gigamonSettings').resourceName]",
+    "name": "[parameters('gigamonSettings').resourceName1]",
     "dependsOn": [
     ],
     "properties": {
-      "roleDefinitionId": "[parameters('gigamonSettings').owner]",
+      "roleDefinitionId": "[parameters('gigamonSettings').contributor]",
       "principalId": "[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),'2015-08-31-PREVIEW').principalId]",
       "scope": "[resourceGroup().id]"
+    }
+  },
+  {
+    "type": "Microsoft.Authorization/roleAssignments",
+    "apiVersion": "2017-05-01",
+    "name":"[parameters('gigamonSettings').resourceName2]",
+    "properties": {
+      "roleDefinitionId": "[parameters('gigamonSettings').contributor]",
+      "principalId": "[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),'2015-08-31-PREVIEW').principalId]",
+      "scope":"/subscriptions/086ef973-2199-477b-9b40-c3d05c01a287/resourceGroups/gigamonazure2"
     }
   }
 ]
