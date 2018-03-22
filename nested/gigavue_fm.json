@@ -200,7 +200,8 @@
             ],
             "properties": {
               "roleDefinitionId": "[parameters('gigamonSettings').contributor]",
-              "principalId": "[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),'2015-08-31-PREVIEW').principalId]"
+              "principalId": "[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),'2015-08-31-PREVIEW').principalId]",
+              "scope": "gigamonazure2"
             }
           }
     ]
