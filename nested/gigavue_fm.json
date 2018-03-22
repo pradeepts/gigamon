@@ -156,7 +156,10 @@
                             "name": "[concat(parameters('gigamonSettings').vmName,'_DataDisk1')]",
                             "diskSizeGB": 40,
                             "lun": 1,
-                            "createOption": "FromImage"
+                            "createOption": "FromImage",
+                            "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        }
                         }
                     ]
                 },
