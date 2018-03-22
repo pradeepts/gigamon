@@ -1,0 +1,115 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "_artifactsLocation": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/sysgain/azure-test-drives/staging/gigamon",
+            "metadata": {
+                "description": "The base uri where artifacts required by this template are located. when the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+            }
+        },
+        "guid":{
+            "type": "string",
+            "defaultValue":"d937ac3d-7a6e-4121-bd25-df10338a6f81",
+            "metadata": {
+                "type": "sessionid",
+                "description": "Unique session id."
+            }
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "vnetApiVersion": "2017-04-01",
+            "pIPApiVersion": "2017-08-01",
+            "nsgApiVersion": "2017-06-01",
+            "nicApiVersion": "2016-09-01",
+            "vmApiVersion": "2016-04-30-preview",
+            "storageApiVersion": "2015-06-15",
+            "availabilitySetApiVersion": "2017-03-30"
+        },
+        "vnetSettings": {
+            "location": "[variables('location')]",
+            "networkApiVersion": "2016-03-30",
+            "virtualNetworkName": "gigamon-vnet",
+            "addressPrefix": "10.0.0.0/16",
+            "subnet1Name": "mgmt-subnet",
+            "subnet1Prefix": "10.0.1.0/24",
+            "subnet2Name": "mirror-subnet",
+            "subnet2Prefix": "10.0.2.0/24"
+        },
+        "gigamonSettings": {
+            "location": "[variables('location')]",
+            "publicIpName": "gigamon-pip",
+            "publicIpAddressType": "Dynamic",
+            "dnsLabelPrefix": "[concat('gigamon',variables('suffix'))]",
+            "nsgName": "gigamon-nsg",
+            "nicName": "gigamon-nic",
+            "vmName": "gigamon",
+            "adminUsername": "adminuser",
+            "adminPassword": "Password@1234",
+            "vmSize": "Standard_D2s_v3",
+            "extName": "gigamon-setup",
+            "customImageSubscription": "[subscription().subscriptionId]",
+            "customImageRG": "gigamonazure2",
+            "resourceName":"[variables('resourceName')]",
+            "contributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+            "scope": "[resourceGroup().id]",      
+            "scriptUrl": "[concat(parameters('_artifactsLocation'),'/scripts/.sh?token=AT2LgF6zFtUISb4m6PwVKKq2ZIleRBvAks5atOh_wA%3D%3D')]"
+        },     
+        "location": "[resourceGroup().location]",
+        "suffix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
+        "resourceName": "[concat(variables('gigamonSettings').vmName, '/Microsoft.Authorization/', parameters('guid'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "VirtualNetwork",
+            "apiVersion": "2016-02-01",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/nested/vnet.json?token=AT2LgGPdE-EMRGjRUmk-n4JglohTSnfLks5atOg9wA%3D%3D')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vnetSettings": {
+                        "value": "[variables('vnetSettings')]"
+                    },
+                    "apiVersions": {
+                        "value": "[variables('apiVersions')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "GigaVUE_FM",
+            "apiVersion": "2016-02-01",
+            "dependsOn": [
+                "VirtualNetwork"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/nested/gigavue_fm.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "gigamonSettings": {
+                        "value": "[variables('gigamonSettings')]"
+                    },
+                    "vnetSettings": {
+                        "value": "[variables('vnetSettings')]"
+                    },
+                    "apiVersions": {
+                        "value": "[variables('apiVersions')]"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+    }
+}

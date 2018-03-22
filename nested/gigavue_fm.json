@@ -1,0 +1,193 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "gigamonSettings": {
+            "type": "object"
+        },
+        "apiVersions": {
+            "type": "object"
+        },
+        "vnetSettings": {
+            "type": "object"
+        }
+    },
+    "variables": {
+        "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetSettings').virtualNetworkName)]",
+        "subnet1Ref": "[concat(variables('vnetId'), '/subnets/', parameters('vnetSettings').subnet1Name)]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('gigamonSettings').publicIpName]",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "apiVersion": "[parameters('apiVersions').pIPApiVersion]",
+            "location": "[parameters('gigamonSettings').location]",
+            "properties": {
+                "publicIpAllocationMethod": "[parameters('gigamonSettings').publicIpAddressType]",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('gigamonSettings').dnsLabelPrefix]"
+                }
+            }
+        },
+        {
+            "name": "[parameters('gigamonSettings').nsgName]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "[parameters('apiVersions').nsgApiVersion]",
+            "location": "[parameters('gigamonSettings').location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "ssh",
+                        "properties": {
+                            "priority": 1010,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "22",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "https",
+                        "properties": {
+                            "priority": 1020,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "443",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "tcp",
+                        "properties": {
+                            "priority": 1030,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "9900-9903",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "all-outbound",
+                        "properties": {
+                            "priority": 1050,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "*",
+                            "access": "Allow",
+                            "direction": "Outbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('gigamonSettings').nicName]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "[parameters('apiVersions').nicApiVersion]",
+            "location": "[parameters('gigamonSettings').location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIpAddresses/', parameters('gigamonSettings').publicIpName)]",
+                "[concat('Microsoft.Network/networkSecurityGroups/',parameters('gigamonSettings').nsgName)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnet1Ref')]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', parameters('gigamonSettings').publicIpName)]"
+                            }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('gigamonSettings').nsgName)]"
+                }
+            }
+        },
+        {
+            "name": "[parameters('gigamonSettings').vmName]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "[parameters('apiVersions').vmApiVersion]",
+            "location": "[parameters('gigamonSettings').location]",
+            "identity": { 
+                "type": "systemAssigned"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('gigamonSettings').nicName)]"
+            ],
+            "properties": {
+                "osProfile": {
+                    "computerName":"[parameters('gigamonSettings').vmName]",
+                    "adminUsername": "[parameters('gigamonSettings').adminUsername]",
+                    "adminPassword": "[parameters('gigamonSettings').adminPassword]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('gigamonSettings').vmSize]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "id":"[concat('/subscriptions/',parameters('gigamonSettings').customImageSubscription,'/resourceGroups/',parameters('gigamonSettings').customImageRG,'/providers/Microsoft.Compute/images/GigaVUE-FM')]"
+                    },
+                    "osDisk": {
+                        "createOption": "fromImage",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        }
+                    },
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('gigamonSettings').nicName)]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('gigamonSettings').vmName,'/MSILinuxExtension')]",
+            "apiVersion":  "[parameters('apiVersions').vmApiVersion]",
+            "location": "[parameters('gigamonSettings').location]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/',parameters('gigamonSettings').vmName)]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.ManagedIdentity",
+                "type": "ManagedIdentityExtensionForLinux",
+                "typeHandlerVersion": "1.0",
+                "autoUpgradeMinorVersion": true  ,
+                "settings": {
+                    "port": 50342
+                },
+                "protectedSettings": {}
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/providers/roleAssignments",
+            "apiVersion": "2017-05-01",
+            "name": "[parameters('gigamonSettings').resourceName]",
+            "properties": {
+              "roleDefinitionId": "[parameters('gigamonSettings').contributor]",
+              "principalId": "[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),parameters('apiVersions').vmApiVersion).principalId]"
+            }
+          }
+    ]
+}
