@@ -18,7 +18,6 @@
     "apiVersion": "2017-05-01",
     "name": "[variables('resourceName')]",
     "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/',parameters('gigamonSettings').vmName,'/extensions/MSILinuxExtension')]"
     ],
     "properties": {
       "roleDefinitionId": "[parameters('gigamonSettings').contributor]",
