@@ -76,7 +76,7 @@
                         }
                     },
                     {
-                        "name": "tcp",
+                        "name": "tcp1",
                         "properties": {
                             "priority": 1040,
                             "sourceAddressPrefix": "*",
