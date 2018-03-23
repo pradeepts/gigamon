@@ -16,14 +16,6 @@
                 "type": "sessionid",
                 "description": "Unique session id."
             }
-        },
-        "guid2":{
-            "type": "string",
-            "defaultValue":"42c0f9d6-d4d7-487f-82ea-5d66e540426e",
-            "metadata": {
-                "type": "sessionid",
-                "description": "Unique session id."
-            }
         }
     },
     "variables": {
@@ -60,10 +52,9 @@
             "extName": "gigamon-setup",
             "customImageSubscription": "[subscription().subscriptionId]",
             "resourceName1":"[parameters('guid1')]",
-            "resourceName2":"[parameters('guid2')]",
             "customImageRG": "gigamonazure2",
             "contributor": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",    
-            "scriptUrl": "[concat(parameters('_artifactsLocation'),'/scripts/.sh')]"
+            "scriptUrl": "[concat(parameters('_artifactsLocation'),'/scripts/gigamon_apis.sh')]"
         },     
         "location": "[resourceGroup().location]",
         "suffix": "[substring(uniqueString(resourceGroup().id), 0, 5)]"
@@ -112,29 +103,6 @@
                     },
                     "apiVersions": {
                         "value": "[variables('apiVersions')]"
-                    }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "name": "Role-Assignment",
-            "apiVersion": "2016-02-01",
-            "dependsOn": [
-                "GigaVUE_FM"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[concat(parameters('_artifactsLocation'), '/nested/role-assignment.json')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "gigamonSettings": {
-                        "value": "[variables('gigamonSettings')]"
-                    },
-                    "principalId": {
-                        "value": "[reference('GigaVUE_FM').outputs.principalId.value]"
                     }
                 }
             }
