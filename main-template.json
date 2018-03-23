@@ -39,6 +39,7 @@
             "subnet2Prefix": "10.0.2.0/24"
         },
         "gigamonSettings": {
+            "rgName":"[resourceGroup().name]",
             "location": "[variables('location')]",
             "publicIpName": "gigamon-pip",
             "publicIpAddressType": "Dynamic",

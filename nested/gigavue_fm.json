@@ -14,7 +14,8 @@
     },
     "variables": {
         "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetSettings').virtualNetworkName)]",
-        "subnet1Ref": "[concat(variables('vnetId'), '/subnets/', parameters('vnetSettings').subnet1Name)]"
+        "subnet1Ref": "[concat(variables('vnetId'), '/subnets/', parameters('vnetSettings').subnet1Name)]",
+        "nsgId":"[resourceId('Microsoft.Network/networkSecurityGroups', parameters('gigamonSettings').nsgName)]"
     },
     "resources": [
         {
@@ -220,6 +221,27 @@
                 "roleDefinitionId": "[parameters('gigamonSettings').contributor]",
                 "principalId": "[reference(concat(resourceId('Microsoft.Compute/virtualMachines/', parameters('gigamonSettings').vmName),'/providers/Microsoft.ManagedIdentity/Identities/default'),'2015-08-31-PREVIEW').principalId]",
                 "scope": "[resourceGroup().id]"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('gigamonSettings').vmName,'/',parameters('gigamonSettings').extName)]",
+            "apiVersion": "[parameters('apiVersions').vmApiVersion]",
+            "location": "[parameters('gigamonSettings').location]",
+            "dependsOn": [
+                "[concat('Microsoft.Authorization/roleAssignments/',parameters('gigamonSettings').resourceName1)]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[parameters('gigamonSettings').scriptUrl]"
+                    ],
+                    "commandToExecute": "[concat('sh gigamon_apis.sh',' ',parameters('apiVersions').rgName,' ',variables('vnetId'),' ',parameters('vnetSettings').subnet1Name,' ',parameters('vnetSettings').subnet2Name,' ',parameters('gigamonSettings').nsgName,' ',variables('nsgId'),' ',parameters('gigamonSettings').location,' ',parameters('gigamonSettings').adminPassword,' ','10.0.1.4',' ','10.0.1.6')]"
+                }
             }
         }
     ],
