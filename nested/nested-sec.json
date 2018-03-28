@@ -152,11 +152,7 @@
                 "[concat('Microsoft.Storage/storageAccounts/',parameters('secOnionSettings').storageAccountName)]"
             ],
             "properties": {
-                "osProfile": {
-                    "computerName": "[parameters('secOnionSettings').vmName]",
-                    "adminUsername": "[parameters('secOnionSettings').adminUsername]",
-                    "adminPassword": "[parameters('secOnionSettings').adminPassword]"
-                },
+               
                 "hardwareProfile": {
                     "vmSize": "[parameters('secOnionSettings').vmSize]"
                 },
