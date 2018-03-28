@@ -158,6 +158,7 @@
                 },
                 "storageProfile": {
                     "osDisk": {
+                        "osType":"Linux",
                         "name": "[concat(parameters('secOnionSettings').vmName,'-osDisk')]",
                         "vhd": {
                             "uri": "https://gigamonseconion.blob.core.windows.net/securityonion/seconion.vhd"
