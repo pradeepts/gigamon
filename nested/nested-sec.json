@@ -136,7 +136,7 @@
         {
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[parameters('secOnionSettings').storageAccountName]",
-            "apiVersion": "[parameters('secOnionSettings').storageApiVersion]",
+            "apiVersion": "[parameters('apiVersions').storageApiVersion]",
             "location": "[parameters('secOnionSettings').location]",
             "properties": {
                 "accountType": "[parameters('secOnionSettings').storageAccountType]"
@@ -152,7 +152,7 @@
                 "[concat('Microsoft.Storage/storageAccounts/',parameters('secOnionSettings').storageAccountName)]"
             ],
             "properties": {
-                
+               
                 "hardwareProfile": {
                     "vmSize": "[parameters('secOnionSettings').vmSize]"
                 },
