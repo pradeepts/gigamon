@@ -152,12 +152,15 @@
                 "[concat('Microsoft.Storage/storageAccounts/',parameters('secOnionSettings').storageAccountName)]"
             ],
             "properties": {
-                
+                "osProfile": {
+                    "computerName": "[parameters('secOnionSettings').vmName]",
+                    "adminUsername": "[parameters('secOnionSettings').adminUsername]",
+                    "adminPassword": "[parameters('secOnionSettings').adminPassword]"
+                },
                 "hardwareProfile": {
                     "vmSize": "[parameters('secOnionSettings').vmSize]"
                 },
                 "storageProfile": {
-                    
                     "osDisk": {
                         "name": "[concat(parameters('secOnionSettings').vmName,'-osDisk')]",
                         "vhd": {
@@ -166,15 +169,15 @@
                         "caching": "ReadWrite",
                         "createOption": "Attach"
                     },
-                "dataDisks": []
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('secOnionSettings').nicName)]"
+                        }
+                    ]
                 }
-            },
-            "networkProfile": {
-                "networkInterfaces": [
-                    {
-                        "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('secOnionSettings').nicName)]"
-                    }
-                ]
             }
         }
     ],
