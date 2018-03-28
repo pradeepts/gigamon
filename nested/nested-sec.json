@@ -1,0 +1,193 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "secOnionSettings": {
+            "type": "object"
+        },
+        "apiVersions": {
+            "type": "object"
+        },
+        "vnetSettings": {
+            "type": "object"
+        }
+    },
+    "variables": {
+        "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetSettings').virtualNetworkName)]",
+        "subnet1Ref": "[concat(variables('vnetId'), '/subnets/', parameters('vnetSettings').subnet1Name)]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('secOnionSettings').publicIpName]",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "apiVersion": "[parameters('apiVersions').pIPApiVersion]",
+            "location": "[parameters('secOnionSettings').location]",
+            "properties": {
+                "publicIpAllocationMethod": "[parameters('secOnionSettings').publicIpAddressType]",
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('secOnionSettings').dnsLabelPrefix]"
+                }
+            }
+        },
+        {
+            "name": "[parameters('secOnionSettings').nsgName]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "[parameters('apiVersions').nsgApiVersion]",
+            "location": "[parameters('secOnionSettings').location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "ssh",
+                        "properties": {
+                            "priority": 1010,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "22",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "https",
+                        "properties": {
+                            "priority": 1020,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "443",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "port-8000",
+                        "properties": {
+                            "priority": 1030,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "8000",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "for-sec-onion",
+                        "properties": {
+                            "priority": 1040,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "Udp",
+                            "destinationPortRange": "4789",
+                            "access": "Allow",
+                            "direction": "Inbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    },
+                    {
+                        "name": "all-outbound",
+                        "properties": {
+                            "priority": 1050,
+                            "sourceAddressPrefix": "*",
+                            "protocol": "TCP",
+                            "destinationPortRange": "*",
+                            "access": "Allow",
+                            "direction": "Outbound",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('secOnionSettings').nicName]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "[parameters('apiVersions').nicApiVersion]",
+            "location": "[parameters('secOnionSettings').location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIpAddresses/', parameters('secOnionSettings').publicIpName)]",
+                "[concat('Microsoft.Network/networkSecurityGroups/',parameters('secOnionSettings').nsgName)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnet1Ref')]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIpAddresses', parameters('secOnionSettings').publicIpName)]"
+                            }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('secOnionSettings').nsgName)]"
+                }
+            }
+        },
+        {
+           
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[parameters('secOnionSettings').storageAccountName]",
+            "apiVersion": "[parameters('secOnionSettings').storageApiVersion]",
+            "location": "[parameters('secOnionSettings').location]",
+            "properties": {
+                "accountType": "[parameters('secOnionSettings').storageAccountType]"
+            }
+        },
+        {
+            "name": "[parameters('secOnionSettings').vmName]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "[parameters('apiVersions').vmApiVersion]",
+            "location": "[parameters('secOnionSettings').location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('secOnionSettings').nicName)]"
+            ],
+            "properties": {
+                "osProfile": {
+                    "computerName":"[parameters('secOnionSettings').vmName]",
+                    "adminUsername": "[parameters('secOnionSettings').adminUsername]",
+                    "adminPassword": "[parameters('secOnionSettings').adminPassword]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('secOnionSettings').vmSize]"
+                },
+                "storageProfile": {
+                    "image": {
+                        "uri": "https://gigamonseconion.blob.core.windows.net/securityonion/seconion.vhd"
+                    },
+                    "osDisk": {
+                        "name": "[concat(parameters('secOnionSettings').vmName,'-osDisk')]",
+                        "vhd": {
+                            "uri": "[concat('http://', parameters('secOnionSettings').storageAccountName, '.blob.core.windows.net/','vhds','/', parameters('secOnionSettings').vmName,'-osdisk.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                    },
+                    "dataDisks": []
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('secOnionSettings').nicName)]"
+                        }
+                    ]
+                }
+            }
+    ],
+    "outputs": {
+        "secOnionPrivateIP": {
+            "type": "string",
+            "value": "[reference(concat('Microsoft.Network/networkInterfaces/', parameters('secOnionSettings').nicName)).ipConfigurations[0].properties.privateIPAddress]"
+        }
+    }
+}
