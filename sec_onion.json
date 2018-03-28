@@ -1,0 +1,110 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "_artifactsLocation": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/pradeepts/gigamon/master",
+            "metadata": {
+                "description": "The base uri where artifacts required by this template are located. when the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+            }
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "vnetApiVersion": "2017-04-01",
+            "pIPApiVersion": "2017-08-01",
+            "nsgApiVersion": "2017-06-01",
+            "nicApiVersion": "2016-09-01",
+            "vmApiVersion": "2016-04-30-preview",
+            "storageApiVersion": "2015-06-15",
+            "availabilitySetApiVersion": "2017-03-30"
+        },
+        "vnetSettings": {
+            "location": "[variables('location')]",
+            "networkApiVersion": "2016-03-30",
+            "virtualNetworkName": "gigamon-vnet",
+            "addressPrefix": "10.0.0.0/16",
+            "subnet1Name": "mgmt-subnet",
+            "subnet1Prefix": "10.0.1.0/24",
+            "subnet2Name": "mirror-subnet",
+            "subnet2Prefix": "10.0.2.0/24"
+        },
+        "secOnionSettings": {
+            "storageAccountType":"Standard_LRS",
+            "storageAccountName":"[concat('stiorage',variables('suffix'))]",
+            "location": "[variables('location')]",
+            "publicIpName": "so-pip",
+            "publicIpAddressType": "Dynamic",
+            "dnsLabelPrefix": "[concat('so',variables('suffix'))]",
+            "nsgName": "so-nsg",
+            "nicName": "so-nic",
+            "vmName": "security-onion",
+            "adminUsername": "adminuser",
+            "adminPassword": "Password@1234",
+            "vmSize": "Standard_DS3_v2",
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "14.04.5-LTS",
+            "version": "latest",
+            "extName": "so-setup",
+            "customImageSubscription": "[subscription().subscriptionId]",
+            "customImageRG": "sm-seconion",
+            "scope": "[resourceGroup().id]",
+            "scriptUrl": "[concat(parameters('_artifactsLocation'),'/scripts/security_onion.sh?token=AT2LgHo39_A3uRxYX82EHcFtto-a3GdFks5avgsQwA%3D%3D')]"
+        },
+        "location": "[resourceGroup().location]",
+        "suffix": "[substring(uniqueString(resourceGroup().id), 0, 5)]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "VirtualNetwork",
+            "apiVersion": "2016-02-01",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/nested/vnet.json?token=AT2LgLDg3rfJJ8TMGY8IZQCcyzN4TrqOks5aviYPwA%3D%3D')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vnetSettings": {
+                        "value": "[variables('vnetSettings')]"
+                    },
+                    "apiVersions": {
+                        "value": "[variables('apiVersions')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "Security-Onion",
+            "apiVersion": "2016-02-01",
+            "dependsOn": [
+                "VirtualNetwork"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('_artifactsLocation'), '/nested/nested-sec.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "secOnionSettings": {
+                        "value": "[variables('secOnionSettings')]"
+                    },
+                    "vnetSettings": {
+                        "value": "[variables('vnetSettings')]"
+                    },
+                    "apiVersions": {
+                        "value": "[variables('apiVersions')]"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+    }
+}
