@@ -134,7 +134,6 @@
             }
         },
         {
-           
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[parameters('secOnionSettings').storageAccountName]",
             "apiVersion": "[parameters('secOnionSettings').storageApiVersion]",
@@ -149,40 +148,35 @@
             "apiVersion": "[parameters('apiVersions').vmApiVersion]",
             "location": "[parameters('secOnionSettings').location]",
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', parameters('secOnionSettings').nicName)]"
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('secOnionSettings').nicName)]",
+                "[concat('Microsoft.Storage/storageAccounts/',parameters('secOnionSettings').storageAccountName)]"
             ],
             "properties": {
-                "osProfile": {
-                    "computerName":"[parameters('secOnionSettings').vmName]",
-                    "adminUsername": "[parameters('secOnionSettings').adminUsername]",
-                    "adminPassword": "[parameters('secOnionSettings').adminPassword]"
-                },
+                
                 "hardwareProfile": {
                     "vmSize": "[parameters('secOnionSettings').vmSize]"
                 },
                 "storageProfile": {
-                    "image": {
-                        "uri": "https://gigamonseconion.blob.core.windows.net/securityonion/seconion.vhd"
-                    },
+                    
                     "osDisk": {
                         "name": "[concat(parameters('secOnionSettings').vmName,'-osDisk')]",
                         "vhd": {
-                            "uri": "[concat('http://', parameters('secOnionSettings').storageAccountName, '.blob.core.windows.net/','vhds','/', parameters('secOnionSettings').vmName,'-osdisk.vhd')]"
+                            "uri": "https://gigamonseconion.blob.core.windows.net/securityonion/seconion.vhd"
                         },
                         "caching": "ReadWrite",
-                        "createOption": "FromImage"
-                    }
+                        "createOption": "Attach"
                     },
-                    "dataDisks": []
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('secOnionSettings').nicName)]"
-                        }
-                    ]
+                "dataDisks": []
                 }
+            },
+            "networkProfile": {
+                "networkInterfaces": [
+                    {
+                        "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('secOnionSettings').nicName)]"
+                    }
+                ]
             }
+        }
     ],
     "outputs": {
         "secOnionPrivateIP": {
